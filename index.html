@@ -1,0 +1,1616 @@
+<title>Move Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+  :root {
+    --bg: #F3F6F8;
+    --surface: #FFFFFF;
+    --surface-2: #EBF0F4;
+    --border: #D9E1E8;
+    --ink: #16222C;
+    --ink-2: #5B6B79;
+    --ink-3: #8B99A6;
+    --primary: #17495F;
+    --primary-hi: #1F5D78;
+    --primary-ink: #FFFFFF;
+    --accent: #D98A34;
+    --accent-ink: #201202;
+    --ok: #1D7A4C;
+    --ok-bg: #E4F5EA;
+    --ok-border: #BFE4CE;
+    --warn: #B0392B;
+    --warn-bg: #FCEAE6;
+    --warn-border: #F0C4BA;
+    --shadow-sm: 0 1px 2px rgba(15, 27, 36, .06);
+    --shadow-md: 0 6px 20px rgba(15, 27, 36, .08);
+    --radius: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D1620;
+      --surface: #142330;
+      --surface-2: #1B2D3C;
+      --border: #2A3E4C;
+      --ink: #E9F0F5;
+      --ink-2: #9FB0BE;
+      --ink-3: #71828F;
+      --primary: #4F93AF;
+      --primary-hi: #66A6C0;
+      --primary-ink: #08141B;
+      --accent: #E8A33D;
+      --accent-ink: #201202;
+      --ok: #55C48B;
+      --ok-bg: #103322;
+      --ok-border: #1B4B33;
+      --warn: #E5836F;
+      --warn-bg: #35201A;
+      --warn-border: #4E2B22;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
+      --shadow-md: 0 10px 26px rgba(0, 0, 0, .4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0D1620;
+    --surface: #142330;
+    --surface-2: #1B2D3C;
+    --border: #2A3E4C;
+    --ink: #E9F0F5;
+    --ink-2: #9FB0BE;
+    --ink-3: #71828F;
+    --primary: #4F93AF;
+    --primary-hi: #66A6C0;
+    --primary-ink: #08141B;
+    --accent: #E8A33D;
+    --accent-ink: #201202;
+    --ok: #55C48B;
+    --ok-bg: #103322;
+    --ok-border: #1B4B33;
+    --warn: #E5836F;
+    --warn-bg: #35201A;
+    --warn-border: #4E2B22;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
+    --shadow-md: 0 10px 26px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 64px; }
+
+  header.top {
+    background: linear-gradient(155deg, var(--primary) 0%, var(--primary-hi) 100%);
+    color: var(--primary-ink);
+    padding: 40px 24px 46px;
+    margin-bottom: -26px;
+  }
+
+  header.top .inner { max-width: 1180px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    opacity: .78;
+    margin: 0 0 10px;
+  }
+
+  h1 {
+    font-family: "Manrope", sans-serif;
+    font-weight: 800;
+    font-size: clamp(30px, 4vw, 40px);
+    letter-spacing: -.01em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+
+  header.top p.lede {
+    font-size: 16px;
+    max-width: 620px;
+    line-height: 1.55;
+    opacity: .92;
+    margin: 0;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+  }
+
+  .upload-card {
+    padding: 28px;
+    position: relative;
+    z-index: 2;
+    margin-top: 30px;
+  }
+
+  .upload-card h2 {
+    font-family: "Manrope", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .upload-card > p {
+    color: var(--ink-2);
+    font-size: 14px;
+    margin: 0 0 22px;
+    line-height: 1.5;
+  }
+
+  .drop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+  }
+
+  @media (max-width: 700px) {
+    .drop-grid { grid-template-columns: 1fr; }
+  }
+
+  .dropzone.optional { border-style: dashed; }
+  .opt-tag {
+    font-family: "Public Sans", sans-serif;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+
+  .dropzone {
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+    padding: 22px 20px;
+    background: var(--surface-2);
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+    position: relative;
+    outline: none;
+  }
+
+  .dropzone:hover, .dropzone:focus-visible { border-color: var(--primary); }
+  .dropzone.dragover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface-2)); transform: scale(1.005); }
+  .dropzone.filled { border-style: solid; border-color: var(--ok-border); background: var(--ok-bg); }
+  .dropzone.errored { border-style: solid; border-color: var(--warn-border); background: var(--warn-bg); }
+
+  .dz-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--primary);
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .dropzone.filled .dz-label { color: var(--ok); }
+  .dropzone.errored .dz-label { color: var(--warn); }
+
+  .dz-title { font-weight: 700; font-size: 15.5px; margin: 0 0 4px; }
+  .dz-hint { color: var(--ink-2); font-size: 13px; line-height: 1.5; margin: 0; }
+
+  .dz-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  .dz-file .name {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 500;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+
+  .dz-badge {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--ok);
+    color: var(--surface);
+    white-space: nowrap;
+  }
+  .errored .dz-badge { background: var(--warn); }
+
+  input[type=file] { display: none; }
+
+  .actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .privacy-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    max-width: 420px;
+    line-height: 1.4;
+  }
+  .privacy-note svg { flex: none; opacity: .7; }
+
+  button.primary {
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--primary-ink);
+    background: var(--primary);
+    border: none;
+    padding: 13px 26px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: background .15s ease, transform .1s ease, opacity .15s ease;
+    white-space: nowrap;
+  }
+  button.primary:hover:not(:disabled) { background: var(--primary-hi); }
+  button.primary:active:not(:disabled) { transform: translateY(1px); }
+  button.primary:disabled { opacity: .4; cursor: not-allowed; }
+
+  button.ghost {
+    font-family: "Public Sans", sans-serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--primary);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  button.ghost:hover { border-color: var(--primary); }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--primary-ink) 40%, transparent);
+    border-top-color: var(--primary-ink);
+    animation: spin .7s linear infinite;
+    display: inline-block;
+    vertical-align: -3px;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  section.results { margin-top: 34px; display: none; }
+  section.results.show { display: block; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+  @media (max-width: 800px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .stat-tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-tile .num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 28px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .stat-tile .lbl {
+    font-size: 12.5px;
+    color: var(--ink-2);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  .stat-tile.incluir .num { color: var(--ok); }
+  .stat-tile.excluir .num { color: var(--warn); }
+  .stat-tile.invalido .num { color: var(--accent); }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  .tab-btn {
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    font-size: 14.5px;
+    padding: 12px 18px;
+    background: none;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .tab-btn .chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--ink-2);
+  }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--primary); }
+  .tab-btn.active .chip.incluir { background: var(--ok-bg); color: var(--ok); }
+  .tab-btn.active .chip.excluir { background: var(--warn-bg); color: var(--warn); }
+  .tab-btn.active .chip.invalido { background: color-mix(in srgb, var(--accent) 20%, var(--surface-2)); color: var(--accent); }
+
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    overflow: hidden;
+  }
+
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .table-toolbar .desc { font-size: 13px; color: var(--ink-2); max-width: 560px; line-height: 1.5; }
+
+  .cnpj-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cnpj-group label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .cnpj-group input[type=text] {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    width: 150px;
+  }
+  .cnpj-group input[type=text]:focus { outline: none; border-color: var(--primary); }
+
+  .table-scroll { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  thead th {
+    position: sticky; top: 0;
+    background: var(--surface-2);
+    text-align: left;
+    padding: 10px 14px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    color: var(--ink);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface-2); }
+  td.mono, th.mono { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+  td.name { white-space: normal; min-width: 200px; }
+
+  .empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--ink-2);
+  }
+  .empty-state .big { font-size: 34px; margin-bottom: 10px; }
+
+  .foot-note {
+    margin-top: 40px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 50;
+    max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- login gate ---------- */
+  html.mg-locked { overflow: hidden; }
+  .login-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-gate.hidden { display: none; }
+  .login-card {
+    width: 100%;
+    max-width: 360px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 28px 26px 24px;
+  }
+  .login-card .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 6px;
+  }
+  .login-card h1 {
+    font-family: "Manrope", sans-serif;
+    font-size: 22px;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .login-card p.lede {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+  .login-card label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-2);
+    margin: 14px 0 6px;
+  }
+  .login-card input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .login-card input:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .login-card button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: var(--primary-ink);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .login-card button:hover { background: var(--primary-hi); }
+  .login-card button:disabled { opacity: .6; cursor: default; }
+  .login-error {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border-radius: 9px;
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    color: var(--warn);
+    font-size: 13px;
+  }
+  .logout-link {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: underline;
+  }
+  .logout-link:hover { color: var(--ink); }
+</style>
+
+<div class="login-gate" id="login-gate">
+  <div class="login-card">
+    <p class="eyebrow">Acesso restrito</p>
+    <h1>Move Group</h1>
+    <p class="lede">Informe seu login e senha para continuar.</p>
+    <form id="login-form">
+      <label for="login-user">Login</label>
+      <input type="text" id="login-user" autocomplete="username" required>
+      <label for="login-pass">Senha</label>
+      <input type="password" id="login-pass" autocomplete="current-password" required>
+      <button type="submit" id="login-submit">Entrar</button>
+      <p class="login-error" id="login-error" style="display:none"></p>
+    </form>
+  </div>
+</div>
+
+<header class="top" style="position:relative">
+  <button class="logout-link" id="logout-btn" style="display:none">Sair</button>
+  <div class="inner">
+    <p class="eyebrow">Conferência de movimentação de vidas</p>
+    <h1>Move Group</h1>
+    <p class="lede">Cruza a base ativa hoje com a base que deveria estar ativa e mostra exatamente quem falta incluir e quem falta excluir — sem depender de conferir manualmente cada CPF.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card upload-card">
+    <h2>1. Anexe as bases</h2>
+    <p>Arraste ou clique para selecionar. Aceita .xlsx, .xls e .csv — os arquivos são lidos aqui no navegador e não saem do seu computador.</p>
+
+    <div class="drop-grid">
+      <div class="dropzone" id="dz-atual" tabindex="0" role="button" aria-label="Anexar Base Atual">
+        <p class="dz-label">Base atual</p>
+        <p class="dz-title">O que está ativo hoje</p>
+        <p class="dz-hint">Sua base de controle interna (com CPF e status de cada vida).</p>
+        <div class="dz-file" id="dz-atual-file" style="display:none">
+          <span class="name" id="dz-atual-name"></span>
+          <span class="dz-badge" id="dz-atual-badge"></span>
+        </div>
+        <input type="file" id="input-atual" accept=".xlsx,.xls,.csv">
+      </div>
+
+      <div class="dropzone" id="dz-futura" tabindex="0" role="button" aria-label="Anexar Base Futura">
+        <p class="dz-label">Base futura</p>
+        <p class="dz-title">O que deveria estar ativo</p>
+        <p class="dz-hint">A base de referência mais recente (ex: export da operadora) — a "vontade" final.</p>
+        <div class="dz-file" id="dz-futura-file" style="display:none">
+          <span class="name" id="dz-futura-name"></span>
+          <span class="dz-badge" id="dz-futura-badge"></span>
+        </div>
+        <input type="file" id="input-futura" accept=".xlsx,.xls,.csv">
+      </div>
+
+      <div class="dropzone optional" id="dz-inadimplentes" tabindex="0" role="button" aria-label="Anexar planilha de exclusão por inadimplência">
+        <p class="dz-label">Exclusão inadimplentes <span class="opt-tag">opcional</span></p>
+        <p class="dz-title">Vidas a excluir por inadimplência</p>
+        <p class="dz-hint">Planilha no layout de movimentação (ex: "EXCLUSÕES inadimplentes"). Essas vidas entram na lista de exclusão mesmo que ainda apareçam ativas na base futura.</p>
+        <div class="dz-file" id="dz-inadimplentes-file" style="display:none">
+          <span class="name" id="dz-inadimplentes-name"></span>
+          <span class="dz-badge" id="dz-inadimplentes-badge"></span>
+        </div>
+        <input type="file" id="input-inadimplentes" accept=".xlsx,.xls,.csv">
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <div class="privacy-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+        Nada é enviado a servidor algum: o cruzamento acontece no seu navegador.
+      </div>
+      <button class="primary" id="btn-process" disabled>Processar conferência</button>
+    </div>
+  </div>
+
+  <section class="results" id="results">
+    <div class="stat-grid">
+      <div class="stat-tile incluir">
+        <div class="num" id="stat-incluir">0</div>
+        <div class="lbl">Pendentes de inclusão — ativos na base futura, ausentes na atual</div>
+      </div>
+      <div class="stat-tile excluir">
+        <div class="num" id="stat-excluir">0</div>
+        <div class="lbl">Pendentes de exclusão — ativos na base atual, ausentes na futura</div>
+      </div>
+      <div class="stat-tile">
+        <div class="num" id="stat-ok">0</div>
+        <div class="lbl">Já batem nas duas bases — nenhuma ação necessária</div>
+      </div>
+      <div class="stat-tile">
+        <div class="num" id="stat-total">0</div>
+        <div class="lbl">Vidas ativas analisadas ao todo (atual + futura, únicas)</div>
+      </div>
+      <div class="stat-tile invalido">
+        <div class="num" id="stat-invalido">0</div>
+        <div class="lbl">Registros com CPF inválido (ausente, dígito verificador errado ou repetido)</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="incluir">
+        Pendências de inclusão <span class="chip incluir" id="tab-chip-incluir">0</span>
+      </button>
+      <button class="tab-btn" data-tab="excluir">
+        Pendências de exclusão <span class="chip excluir" id="tab-chip-excluir">0</span>
+      </button>
+      <button class="tab-btn" data-tab="invalido">
+        Dados inválidos <span class="chip invalido" id="tab-chip-invalido">0</span>
+      </button>
+    </div>
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="desc" id="table-desc">Pessoas que estão ativas na base futura mas ainda não constam na base atual — precisam ser incluídas.</div>
+        <div class="cnpj-group">
+          <label for="input-cnpj-convenio">CNPJ do convênio (opcional)</label>
+          <input type="text" id="input-cnpj-convenio" placeholder="00.000.000/0000-00" inputmode="numeric" maxlength="18">
+          <button class="ghost" id="btn-download">Baixar planilha (.xlsx, 3 abas)</button>
+        </div>
+      </div>
+      <div class="table-scroll" id="table-scroll">
+        <table id="result-table">
+          <thead><tr id="table-head"></tr></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div class="empty-state" id="table-empty" style="display:none">
+          <div class="big">✓</div>
+          <span class="empty-text">Nenhuma pendência nesta categoria.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot-note">Move Group cruza as duas bases pelo CPF (normalizado, ignorando pontuação e zeros à esquerda). Confira sempre uma amostra do resultado antes de aplicar as movimentações.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- helpers ----------
+  function normHeader(h) {
+    if (h == null) return "";
+    let s = String(h);
+    s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    s = s.replace(/[ºª°]/g, "");
+    s = s.replace(/[_]/g, " ");
+    s = s.replace(/\s+/g, " ").trim().toUpperCase();
+    return s;
+  }
+
+  function digitsOnly(v) {
+    if (v == null) return "";
+    return String(v).replace(/\D/g, "");
+  }
+
+  function cpfKey(v) {
+    const d = digitsOnly(v);
+    if (!d) return "";
+    return d.padStart(11, "0").slice(-11);
+  }
+
+  // standard Brazilian CPF check-digit algorithm
+  function isValidCpfChecksum(d) {
+    if (!/^\d{11}$/.test(d)) return false;
+    if (/^(\d)\1{10}$/.test(d)) return false;
+    const calc = (base, factor) => {
+      let sum = 0;
+      for (let i = 0; i < base.length; i++) sum += parseInt(base[i], 10) * (factor - i);
+      const rest = (sum * 10) % 11;
+      return rest === 10 ? 0 : rest;
+    };
+    if (calc(d.slice(0, 9), 10) !== parseInt(d[9], 10)) return false;
+    if (calc(d.slice(0, 10), 11) !== parseInt(d[10], 10)) return false;
+    return true;
+  }
+
+  // classify a raw CPF cell — note: values stored as numbers in Excel commonly
+  // lose leading zeros, so we always zero-pad to 11 digits before validating
+  function classifyCpf(rawVal) {
+    const digits = digitsOnly(rawVal);
+    if (!digits) return { invalid: true, reason: "CPF ausente" };
+    if (digits.length > 11) return { invalid: true, reason: "CPF com dígitos em excesso (mais de 11)" };
+    const key = digits.padStart(11, "0");
+    if (/^(\d)\1{10}$/.test(key)) return { invalid: true, reason: "CPF com todos os dígitos iguais" };
+    if (!isValidCpfChecksum(key)) return { invalid: true, reason: "CPF com dígito verificador inválido" };
+    return { invalid: false };
+  }
+
+  function formatCpf(key) {
+    if (!key || key.length !== 11) return key || "";
+    return key.slice(0,3) + "." + key.slice(3,6) + "." + key.slice(6,9) + "-" + key.slice(9);
+  }
+
+  function fmtDate(v) {
+    if (v == null || v === "") return "";
+    if (v instanceof Date && !isNaN(v)) {
+      const dd = String(v.getDate()).padStart(2,"0");
+      const mm = String(v.getMonth()+1).padStart(2,"0");
+      return `${dd}/${mm}/${v.getFullYear()}`;
+    }
+    return String(v);
+  }
+
+  function titleCase(s) {
+    if (!s) return "";
+    return String(s).trim().toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+  }
+
+  // ---------- Metlife movement-file codebook (from INCLUSÕES/EXCLUSÕES layout) ----------
+  function relDependenciaCode(text) {
+    const t = normHeader(text);
+    if (!t) return "";
+    if (t.includes("TITULAR")) return 1;
+    if (t.includes("CONJUGE") || t.includes("ESPOS")) return 2;
+    if (t.includes("FILH")) return 3;
+    if (t.includes("ENTEAD")) return 5;
+    if (t.includes("TUTELAD")) return 7;
+    if (t.includes("IRMA")) return 9;
+    if (t.includes("COMPANHEIR")) return 11;
+    if (t.includes("CUNHAD")) return 12;
+    if (t.includes("MAE")) return 14;
+    if (t.includes("NET")) return 15;
+    if (t === "PAI") return 17;
+    if (t.includes("SOGR")) return 18;
+    return "";
+  }
+
+  function tipoAssociadoCode(categoriaText) {
+    const t = normHeader(categoriaText);
+    if (!t) return "";
+    if (t.includes("TITULAR")) return 1;
+    if (t.includes("AGREG")) return 3;
+    if (t.includes("DEPEND")) return 2;
+    return "";
+  }
+
+  function sexoCode(letter) {
+    const t = normHeader(letter);
+    if (!t) return "";
+    if (t === "M" || t.includes("MASCULINO")) return 1;
+    if (t === "F" || t.includes("FEMININO")) return 2;
+    return "";
+  }
+
+  // exact column layout used by the Metlife INCLUSÕES/EXCLUSÕES movement spreadsheets
+  const MOV_HEADERS = [
+    "COD OPERAÇÃO", "CONTRATO METLIFE ", " NUMERO DO CNPJ ", "NºMATRICULADAEMPRESA",
+    " CODIGO OU NOME DO PLANO ", "NOME DO ASSOCIADO", "TIPO DE ASSOCIADO", "COD DA DEPENDENCIA",
+    "NOME DA MÃE", "DATA DE NASCIMENTO", " Nº DO PIS ", "Nº DO CPF", "CÓDIGO DO SEXO",
+    "Nº CARTÃO ÚNICO DE SAÚDE ", "LOGRADOURO", "NÚMERO", "BAIRRO", "CIDADE", "COMPLEMENTO",
+    "CEP", "EMAIL", "DDD", "CELULAR", "COD CENTRO DE CUSTO", "DESCRIÇÃO CENTRO DE CUSTO",
+    " DATA DE EXCLUSAO ", "MOTIVO EXCLUSÃO", "DATA INCLUSAO", "DATA DE REATIVAÇÃO",
+    "DATA DE TROCA DE PLANO", "DATA DE CASAMENTO", "NUM_MATRIC_EMPRESA_NOVA", "Numero RG",
+  ];
+
+  // builds one row in the Metlife layout for a "incluir" (from Base Futura) or
+  // "excluir" (from Base Atual) record — fields we can't derive from either base
+  // are left blank for manual completion. `cnpjConvenio` and `dataMovimentacao`
+  // are constants for the whole batch (the CNPJ column holds the convênio's own
+  // CNPJ, not each employer's, and real submissions fill DATA INCLUSAO/EXCLUSAO
+  // with the filing date — confirmed against actual Metlife files this contract
+  // has submitted, not guessed from Base Atual/Futura).
+  function buildMovRow(kind, rec, contratoGeral, cnpjConvenio, dataMovimentacao) {
+    const isExcluir = kind === "excluir";
+    let codOperacao, tipoAssoc, codDep, nomeMae, nascimento, sexoC, cartaoSaude,
+        logradouro, bairro, cidade, complemento, cep, celular, matriculaEmp,
+        plano, descCentroCusto, dataInclusao, dataExclusao;
+
+    if (isExcluir) {
+      codOperacao = 7;
+      tipoAssoc = tipoAssociadoCode(rec.categoria) || "";
+      codDep = tipoAssoc === 1 ? 1 : relDependenciaCode(rec.parentesco);
+      nomeMae = ""; nascimento = rec.nascimento || ""; sexoC = ""; cartaoSaude = "";
+      logradouro = ""; bairro = ""; cidade = ""; complemento = ""; cep = ""; celular = "";
+      matriculaEmp = rec.matricula || ""; plano = rec.plano || "";
+      descCentroCusto = rec.centroCusto || ""; dataInclusao = ""; dataExclusao = dataMovimentacao || "";
+    } else {
+      codOperacao = rec.tipoCode === 2 ? 2 : 1;
+      tipoAssoc = rec.tipoCode || 1;
+      codDep = tipoAssoc === 1 ? 1 : relDependenciaCode(rec.relText);
+      nomeMae = rec.nomeMae || ""; nascimento = rec.nascimento || "";
+      sexoC = sexoCode(rec.sexo); cartaoSaude = rec.cartaoSaude || "";
+      logradouro = rec.logradouro || ""; bairro = rec.bairro || ""; cidade = rec.cidade || "";
+      complemento = rec.complemento || ""; cep = rec.cep || ""; celular = rec.celular || "";
+      matriculaEmp = ""; plano = rec.plano || "";
+      descCentroCusto = ""; dataInclusao = dataMovimentacao || ""; dataExclusao = "";
+    }
+
+    return [
+      codOperacao, contratoGeral || "", cnpjConvenio || "", matriculaEmp, plano, rec.nome || "",
+      tipoAssoc, codDep, nomeMae, nascimento, "", formatCpf(rec.cpf), sexoC, cartaoSaude,
+      logradouro, "", bairro, cidade, complemento, cep, "", "", celular,
+      "", descCentroCusto, dataExclusao, "", dataInclusao, "", "", "", "", "",
+    ];
+  }
+
+  function toast(msg, ms) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._h);
+    toast._h = setTimeout(() => t.classList.remove("show"), ms || 3200);
+  }
+
+  // ---------- workbook loading ----------
+  async function readWorkbook(file) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "csv") {
+      const text = await file.text();
+      return XLSX.read(text, { type: "string", cellDates: true });
+    }
+    const buf = await file.arrayBuffer();
+    return XLSX.read(buf, { type: "array", cellDates: true });
+  }
+
+  // pick the sheet most likely to hold row data (has a CPF-like header, most rows)
+  function pickDataSheet(wb) {
+    let best = null;
+    for (const name of wb.SheetNames) {
+      const ws = wb.Sheets[name];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null, blankrows: false });
+      if (!rows.length) continue;
+      const header = rows[0].map(normHeader);
+      const hasCpf = header.some(h => h.includes("CPF"));
+      const score = (hasCpf ? 1000000 : 0) + rows.length;
+      if (!best || score > best.score) best = { name, rows, header, score, hasCpf };
+    }
+    return best;
+  }
+
+  function colIndex(header, predicate) {
+    for (let i = 0; i < header.length; i++) if (predicate(header[i], i)) return i;
+    return -1;
+  }
+
+  function allColIndexes(header, predicate) {
+    const out = [];
+    for (let i = 0; i < header.length; i++) if (predicate(header[i], i)) out.push(i);
+    return out;
+  }
+
+  // ---------- BASE ATUAL parser (internal control base) ----------
+  function parseAtual(sheetInfo) {
+    const { header, rows } = sheetInfo;
+    const idx = {
+      cpf: colIndex(header, h => h.includes("CPF") && !h.includes("DEP")),
+      status: colIndex(header, h => h.includes("STATUS")),
+      dtExclusao: colIndex(header, h => h.includes("EXCLUSAO") && (h.includes("DT") || h.includes("DATA"))),
+      nome: colIndex(header, h => h === "ASSOCIADO") >= 0 ? colIndex(header, h => h === "ASSOCIADO") :
+            colIndex(header, h => h.includes("ASSOCIADO")),
+      titular: colIndex(header, h => h.includes("TITULAR")),
+      empresa: colIndex(header, h => h.startsWith("NM") && h.includes("EMPRESA")) >= 0
+               ? colIndex(header, h => h.startsWith("NM") && h.includes("EMPRESA"))
+               : colIndex(header, h => h.includes("EMPRESA")),
+      categoria: colIndex(header, h => h.includes("CATEGORIA")),
+      plano: colIndex(header, h => h.includes("PLANO")),
+      matricula: colIndex(header, h => h.includes("MATRICULA")),
+      dataAdesao: colIndex(header, h => h.includes("ADESAO")),
+      nascimento: colIndex(header, h => h.includes("NASCIMENTO")),
+      parentesco: colIndex(header, h => h.includes("REL") && h.includes("DEPENDENCIA")),
+      contrato: colIndex(header, h => h.includes("CONTRATO")),
+      centroCusto: colIndex(header, h => h.includes("CENTRO") && h.includes("CUSTO")),
+    };
+    if (idx.nome < 0) idx.nome = colIndex(header, h => h.includes("NOME") && !h.includes("MAE") && !h.includes("EMPRESA"));
+
+    if (idx.cpf < 0) {
+      return { error: "Não encontrei uma coluna de CPF nesta planilha.", map: new Map(), count: 0, activeTotal: 0, invalid: [] };
+    }
+
+    const map = new Map();
+    const invalid = [];
+    let activeTotal = 0;
+    let contratoGeral = "";
+    for (const r of rows.slice(1)) {
+      const rawCpf = r[idx.cpf];
+      const statusVal = idx.status >= 0 ? normHeader(r[idx.status]) : "";
+      const dtExcVal = idx.dtExclusao >= 0 ? r[idx.dtExclusao] : null;
+      const isActive = (idx.status < 0 || statusVal.includes("ATIV")) && (dtExcVal == null || dtExcVal === "");
+      if (!isActive) continue;
+      activeTotal++;
+
+      const cls = classifyCpf(rawCpf);
+      if (cls.invalid) {
+        invalid.push({
+          origem: "Base Atual",
+          cpfBruto: rawCpf == null ? "" : String(rawCpf),
+          nome: titleCase(idx.nome >= 0 ? r[idx.nome] : ""),
+          empresa: idx.empresa >= 0 ? r[idx.empresa] : "",
+          motivo: cls.reason,
+        });
+      }
+
+      if (!contratoGeral && idx.contrato >= 0 && r[idx.contrato] != null && r[idx.contrato] !== "") {
+        contratoGeral = String(r[idx.contrato]);
+      }
+
+      const cpf = cpfKey(rawCpf);
+      if (!cpf) continue;
+      if (map.has(cpf)) continue; // keep first occurrence
+      map.set(cpf, {
+        cpf,
+        nome: titleCase(idx.nome >= 0 ? r[idx.nome] : ""),
+        titular: titleCase(idx.titular >= 0 ? r[idx.titular] : ""),
+        empresa: idx.empresa >= 0 ? r[idx.empresa] : "",
+        categoria: idx.categoria >= 0 ? r[idx.categoria] : "",
+        parentesco: idx.parentesco >= 0 ? r[idx.parentesco] : "",
+        plano: idx.plano >= 0 ? r[idx.plano] : "",
+        matricula: idx.matricula >= 0 ? r[idx.matricula] : "",
+        dataAdesao: idx.dataAdesao >= 0 ? fmtDate(r[idx.dataAdesao]) : "",
+        nascimento: idx.nascimento >= 0 ? fmtDate(r[idx.nascimento]) : "",
+        centroCusto: idx.centroCusto >= 0 ? r[idx.centroCusto] : "",
+      });
+    }
+    return { map, count: rows.length - 1, activeTotal, colsFound: idx, invalid, contrato: contratoGeral };
+  }
+
+  // ---------- BASE FUTURA parser (reference / target base) ----------
+  function parseFutura(sheetInfo) {
+    const { header, rows } = sheetInfo;
+    const idx = {
+      cpfMain: colIndex(header, h => h.includes("CPF") && !h.includes("DEP")),
+      cpfDep: colIndex(header, h => h.includes("CPF") && h.includes("DEP")),
+      dtFim: colIndex(header, h => h.includes("DTFIM")) >= 0 ? colIndex(header, h => h.includes("DTFIM"))
+             : colIndex(header, h => (h.includes("DATA") || h.startsWith("DT")) && h.includes("FIM")),
+      nomeMain: colIndex(header, h => h.includes("SOCIO")) >= 0 ? colIndex(header, h => h.includes("SOCIO"))
+                : colIndex(header, h => h.includes("ASSOCIADO") && !h.includes("TIPO")),
+      nomeDep: colIndex(header, h => h.includes("DEPENDENTE")),
+      empresa: colIndex(header, h => h.startsWith("NM") && h.includes("EMPRESA")) >= 0
+               ? colIndex(header, h => h.startsWith("NM") && h.includes("EMPRESA"))
+               : colIndex(header, h => h.includes("EMPRESA")),
+      plano: colIndex(header, h => h.includes("TPPLANO")) >= 0 ? colIndex(header, h => h.includes("TPPLANO"))
+             : colIndex(header, h => h.includes("PLANO")),
+      nascimentoMain: colIndex(header, h => h.includes("NASCIMENTO") && !h.includes("MAE")),
+      parentesco: colIndex(header, h => h.includes("PARENTESCO")),
+      cnpj: colIndex(header, h => h.includes("CNPJ") && !h.includes("LOCALTRAB")),
+      nomeMae: colIndex(header, h => h.includes("MAE")),
+      sexo: colIndex(header, h => h.includes("SEXO")),
+      cartaoSaude: colIndex(header, h => h.includes("CARTAO") && h.includes("SAUDE")),
+      logradouro: colIndex(header, h => h.includes("ENDERECO")),
+      complemento: colIndex(header, h => h.includes("COMPLEMENTO")),
+      bairro: colIndex(header, h => h.includes("BAIRRO")),
+      cep: colIndex(header, h => h.includes("CEP")),
+      cidade: colIndex(header, h => h.includes("CIDADE")),
+      celular: colIndex(header, h => h.includes("CELULAR")),
+      dtInicio: colIndex(header, h => h.includes("INICIO") && (h.startsWith("DT") || h.includes("DATA"))),
+    };
+
+    if (idx.cpfMain < 0) {
+      return { error: "Não encontrei uma coluna de CPF nesta planilha.", map: new Map(), count: 0, activeTotal: 0, invalid: [] };
+    }
+
+    const map = new Map();
+    const invalid = [];
+    let activeTotal = 0;
+    for (const r of rows.slice(1)) {
+      const dtFimVal = idx.dtFim >= 0 ? r[idx.dtFim] : null;
+      const rowActive = (dtFimVal == null || dtFimVal === "");
+      if (!rowActive) continue;
+
+      const rawMain = r[idx.cpfMain];
+      const mainCls = classifyCpf(rawMain);
+      if (mainCls.invalid) {
+        invalid.push({
+          origem: "Base Futura",
+          cpfBruto: rawMain == null ? "" : String(rawMain),
+          nome: titleCase(idx.nomeMain >= 0 ? r[idx.nomeMain] : ""),
+          empresa: idx.empresa >= 0 ? r[idx.empresa] : "",
+          motivo: mainCls.reason,
+        });
+      }
+
+      const mainCpf = cpfKey(rawMain);
+      if (mainCpf && !map.has(mainCpf)) {
+        activeTotal++;
+        map.set(mainCpf, {
+          cpf: mainCpf,
+          nome: titleCase(idx.nomeMain >= 0 ? r[idx.nomeMain] : ""),
+          tipo: "Titular",
+          tipoCode: 1,
+          relText: "",
+          empresa: idx.empresa >= 0 ? r[idx.empresa] : "",
+          plano: idx.plano >= 0 ? r[idx.plano] : "",
+          nascimento: idx.nascimentoMain >= 0 ? fmtDate(r[idx.nascimentoMain]) : "",
+          cnpj: idx.cnpj >= 0 ? r[idx.cnpj] : "",
+          nomeMae: idx.nomeMae >= 0 ? titleCase(r[idx.nomeMae]) : "",
+          sexo: idx.sexo >= 0 ? r[idx.sexo] : "",
+          cartaoSaude: idx.cartaoSaude >= 0 ? r[idx.cartaoSaude] : "",
+          logradouro: idx.logradouro >= 0 ? r[idx.logradouro] : "",
+          complemento: idx.complemento >= 0 ? r[idx.complemento] : "",
+          bairro: idx.bairro >= 0 ? r[idx.bairro] : "",
+          cep: idx.cep >= 0 ? r[idx.cep] : "",
+          cidade: idx.cidade >= 0 ? r[idx.cidade] : "",
+          celular: idx.celular >= 0 ? r[idx.celular] : "",
+          dtInicio: idx.dtInicio >= 0 ? fmtDate(r[idx.dtInicio]) : "",
+        });
+      } else if (mainCpf) {
+        activeTotal++;
+      }
+
+      if (idx.cpfDep >= 0) {
+        const rawDep = r[idx.cpfDep];
+        const depDigits = digitsOnly(rawDep);
+        if (depDigits) {
+          const depCls = classifyCpf(rawDep);
+          if (depCls.invalid) {
+            invalid.push({
+              origem: "Base Futura",
+              cpfBruto: String(rawDep),
+              nome: titleCase(idx.nomeDep >= 0 ? r[idx.nomeDep] : ""),
+              empresa: idx.empresa >= 0 ? r[idx.empresa] : "",
+              motivo: depCls.reason,
+            });
+          }
+          const depCpf = cpfKey(rawDep);
+          if (depCpf && !map.has(depCpf)) {
+            activeTotal++;
+            map.set(depCpf, {
+              cpf: depCpf,
+              nome: titleCase(idx.nomeDep >= 0 ? r[idx.nomeDep] : ""),
+              tipo: idx.parentesco >= 0 && r[idx.parentesco] ? titleCase(r[idx.parentesco]) : "Dependente",
+              tipoCode: 2,
+              relText: idx.parentesco >= 0 ? r[idx.parentesco] : "",
+              empresa: idx.empresa >= 0 ? r[idx.empresa] : "",
+              plano: idx.plano >= 0 ? r[idx.plano] : "",
+              nascimento: "",
+              cnpj: idx.cnpj >= 0 ? r[idx.cnpj] : "",
+              nomeMae: "",
+              sexo: "",
+              cartaoSaude: "",
+              logradouro: "",
+              complemento: "",
+              bairro: "",
+              cep: "",
+              cidade: "",
+              celular: "",
+              dtInicio: "",
+            });
+          } else if (depCpf) {
+            activeTotal++;
+          }
+        }
+      }
+    }
+    return { map, count: rows.length - 1, activeTotal, colsFound: idx, invalid };
+  }
+
+  // ---------- exclusão por inadimplência (opcional) ----------
+  // this file already arrives in the Metlife movement layout (same MOV_HEADERS),
+  // pre-filled and ready to submit — so instead of recomputing codes from Base
+  // Atual/Futura we copy each row's own cells straight through by matching
+  // headers exactly, and just carry that row into the download untouched.
+  const MOV_HEADERS_NORM = MOV_HEADERS.map(normHeader);
+
+  function parseInadimplentes(sheetInfo) {
+    const { header, rows } = sheetInfo;
+    const cpfIdx = colIndex(header, h => h.includes("CPF"));
+    if (cpfIdx < 0) {
+      return { error: "Não encontrei uma coluna de CPF nesta planilha.", map: new Map(), count: 0, activeTotal: 0, invalid: [] };
+    }
+    const nomeIdx = colIndex(header, h => h.includes("NOME") && h.includes("ASSOCIADO")) >= 0
+      ? colIndex(header, h => h.includes("NOME") && h.includes("ASSOCIADO"))
+      : colIndex(header, h => h.includes("NOME") && !h.includes("MAE"));
+    // for each canonical Metlife column, find this sheet's matching column index (exact header match)
+    const colFor = MOV_HEADERS_NORM.map(canon => header.indexOf(canon));
+
+    const map = new Map();
+    const invalid = [];
+    let activeTotal = 0;
+    for (const r of rows.slice(1)) {
+      const rawCpf = r[cpfIdx];
+      const cls = classifyCpf(rawCpf);
+      if (cls.invalid) {
+        invalid.push({
+          origem: "Exclusão Inadimplentes",
+          cpfBruto: rawCpf == null ? "" : String(rawCpf),
+          nome: titleCase(nomeIdx >= 0 ? r[nomeIdx] : ""),
+          empresa: "",
+          motivo: cls.reason,
+        });
+        continue;
+      }
+      const cpf = cpfKey(rawCpf);
+      if (!cpf || map.has(cpf)) continue;
+      activeTotal++;
+
+      const movRow = MOV_HEADERS.map((_, i) => {
+        const srcIdx = colFor[i];
+        if (srcIdx < 0) return "";
+        if (i === 11) return formatCpf(cpf); // Nº DO CPF — always normalized
+        const v = r[srcIdx];
+        if (v instanceof Date) return fmtDate(v);
+        return v == null ? "" : v;
+      });
+      movRow[0] = 7; // COD OPERAÇÃO — this file is always an exclusão
+
+      map.set(cpf, { cpf, nome: titleCase(nomeIdx >= 0 ? r[nomeIdx] : ""), movRow });
+    }
+    return { map, count: rows.length - 1, activeTotal, invalid };
+  }
+
+  // ---------- state ----------
+  const state = {
+    atual: null,   // { file, parsed }
+    futura: null,
+    inadimplentes: null,
+    result: null,
+    activeTab: "incluir",
+  };
+
+  function setupDropzone(zoneId, inputId, kind) {
+    const zone = document.getElementById(zoneId);
+    const input = document.getElementById(inputId);
+
+    zone.addEventListener("click", () => input.click());
+    zone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("dragover"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("dragover");
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(kind, e.dataTransfer.files[0]);
+    });
+    input.addEventListener("change", () => {
+      if (input.files && input.files[0]) handleFile(kind, input.files[0]);
+    });
+  }
+
+  async function handleFile(kind, file) {
+    const zone = document.getElementById("dz-" + kind);
+    const fileRow = document.getElementById("dz-" + kind + "-file");
+    const nameEl = document.getElementById("dz-" + kind + "-name");
+    const badgeEl = document.getElementById("dz-" + kind + "-badge");
+
+    zone.classList.remove("errored", "filled");
+    fileRow.style.display = "flex";
+    nameEl.textContent = file.name;
+    badgeEl.textContent = "lendo…";
+
+    try {
+      const wb = await readWorkbook(file);
+      const sheetInfo = pickDataSheet(wb);
+      if (!sheetInfo) throw new Error("Planilha vazia ou ilegível.");
+      const parsed = kind === "atual" ? parseAtual(sheetInfo)
+        : kind === "futura" ? parseFutura(sheetInfo)
+        : parseInadimplentes(sheetInfo);
+      if (parsed.error) throw new Error(parsed.error);
+
+      state[kind] = { file, parsed };
+      zone.classList.add("filled");
+      if (kind === "inadimplentes") {
+        badgeEl.textContent = `${parsed.activeTotal.toLocaleString("pt-BR")} vidas`;
+      } else {
+        badgeEl.textContent = `${parsed.activeTotal.toLocaleString("pt-BR")} ativos`;
+      }
+
+      // Se já existe um resultado na tela (o usuário já clicou em "Processar"
+      // antes), reprocessa automaticamente agora — assim anexar/trocar a
+      // planilha de inadimplência (ou qualquer outra) depois de já ter
+      // processado nunca deixa o resultado desatualizado.
+      if (state.result && state.atual && state.futura) {
+        const outcome = processData();
+        if (kind === "inadimplentes") {
+          toast(`${file.name} lido: ${parsed.activeTotal.toLocaleString("pt-BR")} vidas marcadas para exclusão por inadimplência. Resultado atualizado.`, 5500);
+        } else {
+          toast(`${file.name} lido: ${parsed.activeTotal.toLocaleString("pt-BR")} vidas ativas identificadas. Resultado atualizado.`, 5500);
+        }
+        inadimplenciaToast(outcome);
+      } else if (kind === "inadimplentes") {
+        toast(`${file.name} lido: ${parsed.activeTotal.toLocaleString("pt-BR")} vidas marcadas para exclusão por inadimplência.`);
+      } else {
+        toast(`${file.name} lido: ${parsed.activeTotal.toLocaleString("pt-BR")} vidas ativas identificadas.`);
+      }
+    } catch (err) {
+      state[kind] = null;
+      zone.classList.add("errored");
+      badgeEl.textContent = "erro";
+      toast("Não consegui ler esse arquivo: " + err.message, 4500);
+    }
+    updateProcessButton();
+  }
+
+  function updateProcessButton() {
+    document.getElementById("btn-process").disabled = !(state.atual && state.futura);
+  }
+
+  setupDropzone("dz-atual", "input-atual", "atual");
+  setupDropzone("dz-futura", "input-futura", "futura");
+  setupDropzone("dz-inadimplentes", "input-inadimplentes", "inadimplentes");
+
+  // ---------- processing ----------
+  // Núcleo do cruzamento — usado tanto pelo clique em "Processar conferência"
+  // quanto para reprocessar automaticamente se o usuário anexar/trocar um
+  // arquivo (inclusive a planilha opcional de inadimplência) depois de já
+  // ter processado uma vez, para que o resultado nunca fique desatualizado.
+  function processData() {
+    if (!state.atual || !state.futura) return null;
+    try {
+      const atualMap = state.atual.parsed.map;
+      const futuraMap = state.futura.parsed.map;
+
+      const incluir = [];
+      for (const [cpf, rec] of futuraMap) {
+        if (!atualMap.has(cpf)) incluir.push(rec);
+      }
+      const excluir = [];
+      for (const [cpf, rec] of atualMap) {
+        if (!futuraMap.has(cpf)) excluir.push(rec);
+      }
+      excluir.forEach(r => { r.origem = "Atual x Futura"; });
+      let okCount = 0;
+      for (const cpf of atualMap.keys()) if (futuraMap.has(cpf)) okCount++;
+
+      // exclusão por inadimplência (opcional): essas vidas entram na lista de
+      // exclusão mesmo que ainda constem ativas na base futura, e vetam uma
+      // eventual inclusão pendente para a mesma pessoa (não faz sentido pedir
+      // inclusão e exclusão do mesmo CPF no mesmo lote).
+      let removidosDeInclusao = 0;
+      let adicionadosPorInadimplencia = 0;
+      const inadimplentesMap = state.inadimplentes ? state.inadimplentes.parsed.map : null;
+      if (inadimplentesMap && inadimplentesMap.size) {
+        for (let i = incluir.length - 1; i >= 0; i--) {
+          if (inadimplentesMap.has(incluir[i].cpf)) {
+            incluir.splice(i, 1);
+            removidosDeInclusao++;
+          }
+        }
+        const excluirCpfSet = new Set(excluir.map(r => r.cpf));
+        for (const r of excluir) {
+          const inad = inadimplentesMap.get(r.cpf);
+          if (inad) r.movRowOverride = inad.movRow;
+        }
+        for (const [cpf, rec] of inadimplentesMap) {
+          if (excluirCpfSet.has(cpf)) continue;
+          const atualRec = atualMap.get(cpf);
+          excluir.push({
+            cpf,
+            nome: (atualRec && atualRec.nome) || rec.nome,
+            titular: atualRec ? atualRec.titular : "",
+            empresa: atualRec ? atualRec.empresa : "",
+            categoria: atualRec ? atualRec.categoria : "",
+            parentesco: atualRec ? atualRec.parentesco : "",
+            plano: atualRec ? atualRec.plano : "",
+            matricula: atualRec ? atualRec.matricula : "",
+            dataAdesao: atualRec ? atualRec.dataAdesao : "",
+            centroCusto: atualRec ? atualRec.centroCusto : "",
+            origem: "Inadimplência",
+            movRowOverride: rec.movRow,
+          });
+          excluirCpfSet.add(cpf);
+          adicionadosPorInadimplencia++;
+        }
+      }
+
+      incluir.sort((a,b) => a.nome.localeCompare(b.nome, "pt-BR"));
+      excluir.sort((a,b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+      const invalidos = [
+        ...state.atual.parsed.invalid,
+        ...state.futura.parsed.invalid,
+        ...(state.inadimplentes ? state.inadimplentes.parsed.invalid : []),
+      ];
+      invalidos.sort((a,b) => a.origem.localeCompare(b.origem, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR"));
+
+      const totalUnicas = new Set([...atualMap.keys(), ...futuraMap.keys()]).size;
+
+      state.result = { incluir, excluir, okCount, totalUnicas, invalidos };
+      renderResults();
+      return { adicionadosPorInadimplencia, removidosDeInclusao };
+    } catch (err) {
+      toast("Erro ao processar: " + err.message, 4500);
+      return null;
+    }
+  }
+
+  function inadimplenciaToast(outcome) {
+    if (!outcome) return;
+    const { adicionadosPorInadimplencia, removidosDeInclusao } = outcome;
+    if (!adicionadosPorInadimplencia && !removidosDeInclusao) return;
+    let msg = "";
+    if (adicionadosPorInadimplencia) msg += `${adicionadosPorInadimplencia} vida(s) adicionada(s) à exclusão por inadimplência. `;
+    if (removidosDeInclusao) msg += `${removidosDeInclusao} pendência(s) de inclusão removida(s) por constarem também na exclusão por inadimplência.`;
+    toast(msg.trim(), 5500);
+  }
+
+  document.getElementById("btn-process").addEventListener("click", () => {
+    const btn = document.getElementById("btn-process");
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span>Processando…';
+
+    setTimeout(() => {
+      const outcome = processData();
+      if (outcome) {
+        document.getElementById("results").classList.add("show");
+        document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
+        inadimplenciaToast(outcome);
+      }
+      btn.innerHTML = originalHtml;
+      updateProcessButton();
+    }, 30);
+  });
+
+  function renderResults() {
+    const { incluir, excluir, okCount, totalUnicas, invalidos } = state.result;
+    document.getElementById("stat-incluir").textContent = incluir.length.toLocaleString("pt-BR");
+    document.getElementById("stat-excluir").textContent = excluir.length.toLocaleString("pt-BR");
+    document.getElementById("stat-ok").textContent = okCount.toLocaleString("pt-BR");
+    document.getElementById("stat-total").textContent = totalUnicas.toLocaleString("pt-BR");
+    document.getElementById("stat-invalido").textContent = invalidos.length.toLocaleString("pt-BR");
+    document.getElementById("tab-chip-incluir").textContent = incluir.length.toLocaleString("pt-BR");
+    document.getElementById("tab-chip-excluir").textContent = excluir.length.toLocaleString("pt-BR");
+    document.getElementById("tab-chip-invalido").textContent = invalidos.length.toLocaleString("pt-BR");
+    renderTable();
+  }
+
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.activeTab = btn.dataset.tab;
+      renderTable();
+    });
+  });
+
+  const TAB_DESC = {
+    incluir: "Pessoas que estão ativas na base futura mas ainda não constam na base atual — precisam ser incluídas. No arquivo baixado, esta aba já sai no layout de movimentação da Metlife (mesmas colunas de INCLUSÕES); campos que nenhuma das bases traz ficam em branco para preenchimento manual.",
+    excluir: "Pessoas que ainda estão ativas na base atual mas não aparecem (ativas) na base futura — precisam ser excluídas. Inclui também quem veio da planilha de exclusão por inadimplência, quando anexada (coluna Origem). No arquivo baixado, esta aba já sai no layout de movimentação da Metlife (mesmas colunas de EXCLUSÕES); campos que nenhuma das bases traz ficam em branco para preenchimento manual.",
+    invalido: "Registros com CPF que não passou na validação (ausente, com dígito verificador incorreto ou com todos os dígitos iguais). Continuam entrando no cruzamento acima quando têm 11 dígitos — aparecem aqui só para revisão.",
+  };
+  const TAB_EMPTY = {
+    incluir: "Nenhuma pendência nesta categoria.",
+    excluir: "Nenhuma pendência nesta categoria.",
+    invalido: "Nenhum CPF inválido encontrado.",
+  };
+  const TAB_COLS = {
+    incluir: [["CPF","cpf",true], ["Nome","nome",false], ["Tipo","tipo",false], ["Empresa / Contrato","empresa",false], ["Plano","plano",false], ["Nascimento","nascimento",false]],
+    excluir: [["CPF","cpf",true], ["Nome","nome",false], ["Origem","origem",false], ["Titular da família","titular",false], ["Empresa","empresa",false], ["Categoria","categoria",false], ["Matrícula","matricula",true], ["Data de adesão","dataAdesao",false]],
+    invalido: [["Origem","origem",false], ["CPF (como está na planilha)","cpfBruto",true], ["Nome","nome",false], ["Empresa / Contrato","empresa",false], ["Motivo","motivo",false]],
+  };
+
+  function renderTable() {
+    if (!state.result) return;
+    const tab = state.activeTab;
+    const rows = tab === "incluir" ? state.result.incluir : tab === "excluir" ? state.result.excluir : state.result.invalidos;
+    document.getElementById("table-desc").textContent = TAB_DESC[tab];
+
+    const head = document.getElementById("table-head");
+    const body = document.getElementById("table-body");
+    const empty = document.getElementById("table-empty");
+    const table = document.getElementById("result-table");
+
+    const cols = TAB_COLS[tab];
+    head.innerHTML = cols.map(([label,,mono]) => `<th class="${mono ? "mono" : ""}">${label}</th>`).join("");
+
+    if (!rows.length) {
+      body.innerHTML = "";
+      table.style.display = "none";
+      empty.querySelector(".empty-text").textContent = TAB_EMPTY[tab];
+      empty.style.display = "block";
+      return;
+    }
+    table.style.display = "table";
+    empty.style.display = "none";
+
+    body.innerHTML = rows.map(r => {
+      return "<tr>" + cols.map(([, key, mono]) => {
+        let val = key === "cpf" ? formatCpf(r.cpf) : (r[key] ?? "");
+        return `<td class="${mono ? "mono" : ""}${key === "nome" ? " name" : ""}">${escapeHtml(String(val))}</td>`;
+      }).join("") + "</tr>";
+    }).join("");
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  // ---------- download ----------
+  document.getElementById("btn-download").addEventListener("click", async () => {
+    if (!state.result) return;
+    const btn = document.getElementById("btn-download");
+    const original = btn.textContent;
+    btn.textContent = "Gerando…";
+    btn.disabled = true;
+    try {
+      const wb = XLSX.utils.book_new();
+
+      const contratoGeral = (state.atual && state.atual.parsed && state.atual.parsed.contrato) || "";
+      const cnpjConvenio = (document.getElementById("input-cnpj-convenio").value || "").trim();
+      const todayFmt = fmtDate(new Date());
+
+      const incluirMovRows = state.result.incluir.map(r => buildMovRow("incluir", r, contratoGeral, cnpjConvenio, todayFmt));
+      // rows that came from the exclusão-por-inadimplência file already carry a
+      // ready-made movement row (movRowOverride) — use it as-is instead of
+      // recomputing from Base Atual, only filling contract/CNPJ if they were blank.
+      const excluirMovRows = state.result.excluir.map(r => {
+        if (r.movRowOverride) {
+          const row = r.movRowOverride.slice();
+          if (!row[1]) row[1] = contratoGeral || "";
+          if (!row[2]) row[2] = cnpjConvenio || "";
+          return row;
+        }
+        return buildMovRow("excluir", r, contratoGeral, cnpjConvenio, todayFmt);
+      });
+
+      const invalidosRows = state.result.invalidos.map(r => ({
+        "Origem": r.origem, "CPF (como está na planilha)": r.cpfBruto, "Nome": r.nome,
+        "Empresa / Contrato": r.empresa, "Motivo": r.motivo,
+      }));
+
+      const wsIncluir = XLSX.utils.aoa_to_sheet([MOV_HEADERS, ...incluirMovRows]);
+      const wsExcluir = XLSX.utils.aoa_to_sheet([MOV_HEADERS, ...excluirMovRows]);
+      const wsInvalidos = XLSX.utils.json_to_sheet(invalidosRows.length ? invalidosRows : [{"Origem":"","CPF (como está na planilha)":"","Nome":"","Empresa / Contrato":"","Motivo":""}]);
+      XLSX.utils.book_append_sheet(wb, wsIncluir, "Pendencias Inclusao");
+      XLSX.utils.book_append_sheet(wb, wsExcluir, "Pendencias Exclusao");
+      XLSX.utils.book_append_sheet(wb, wsInvalidos, "Dados Invalidos");
+
+      const wbArray = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      // XLSX's "array" output type can be a plain byte Array or a typed array
+      // depending on version — normalize to Uint8Array so the Blob is built
+      // from real binary data either way.
+      const blob = new Blob([new Uint8Array(wbArray)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+
+      const today = new Date();
+      const stamp = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,"0")}${String(today.getDate()).padStart(2,"0")}`;
+      const filename = `move-group-pendencias-${stamp}.xlsx`;
+
+      const downloads = window.claude ? await window.claude.use("downloads").catch(() => null) : null;
+      if (downloads) {
+        try {
+          const res = await downloads.save({ filename, data: blob });
+          toast(res.status === "saved" ? "Planilha salva com sucesso." : "Planilha entregue.");
+        } catch (err) {
+          if (err && err.code === "declined") {
+            // user said no, nothing else to do
+          } else {
+            toast("Não consegui salvar o arquivo: " + (err && err.message ? err.message : "erro desconhecido"), 4500);
+          }
+        }
+      } else {
+        // plain-browser fallback (e.g. running outside claude.ai, like a self-hosted copy)
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        toast("Planilha baixada.");
+      }
+    } catch (err) {
+      toast("Não consegui gerar a planilha: " + (err && err.message ? err.message : "erro desconhecido"), 4500);
+    } finally {
+      btn.textContent = original;
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
+
+<script>
+  // ---------- login gate ----------
+  // Autenticação simples no navegador: confere login/senha contra a planilha
+  // "usuarios.xlsx" publicada neste mesmo repositório. Não é um mecanismo de
+  // segurança forte (o site é 100% estático, então essa planilha é um
+  // arquivo público que qualquer pessoa pode abrir diretamente pela URL) —
+  // serve como uma trava de acesso simples, não como proteção de dados.
+  (function () {
+    const gate = document.getElementById("login-gate");
+    const form = document.getElementById("login-form");
+    const userInput = document.getElementById("login-user");
+    const passInput = document.getElementById("login-pass");
+    const errorEl = document.getElementById("login-error");
+    const submitBtn = document.getElementById("login-submit");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    function lockPage() {
+      document.documentElement.classList.add("mg-locked");
+      gate.classList.remove("hidden");
+      logoutBtn.style.display = "none";
+    }
+
+    function unlockPage() {
+      document.documentElement.classList.remove("mg-locked");
+      gate.classList.add("hidden");
+      logoutBtn.style.display = "block";
+    }
+
+    if (sessionStorage.getItem("mg_auth") === "1") {
+      unlockPage();
+    } else {
+      lockPage();
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorEl.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Verificando…";
+      try {
+        const resp = await fetch("usuarios.xlsx", { cache: "no-store" });
+        if (!resp.ok) throw new Error("não consegui carregar a lista de usuários (HTTP " + resp.status + ")");
+        const buf = await resp.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: "" });
+        const dataRows = rows.slice(1); // 1ª linha = cabeçalho (LOGIN, SENHA)
+
+        const typedUser = userInput.value.trim().toLowerCase();
+        const typedPass = passInput.value;
+        const ok = dataRows.some(r =>
+          String(r[0] || "").trim().toLowerCase() === typedUser &&
+          String(r[1] || "") === typedPass
+        );
+
+        if (ok) {
+          sessionStorage.setItem("mg_auth", "1");
+          sessionStorage.setItem("mg_user", userInput.value.trim());
+          passInput.value = "";
+          unlockPage();
+        } else {
+          errorEl.textContent = "Login ou senha inválidos.";
+          errorEl.style.display = "block";
+        }
+      } catch (err) {
+        errorEl.textContent = "Erro ao verificar login: " + err.message;
+        errorEl.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Entrar";
+      }
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      sessionStorage.removeItem("mg_auth");
+      sessionStorage.removeItem("mg_user");
+      lockPage();
+    });
+  })();
+</script>
