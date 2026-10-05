@@ -1,0 +1,42 @@
+name: Atualizar Base de Ativos
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: atualizar-base-ativos
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instala Playwright
+        run: |
+          npm init -y
+          npm install playwright@1.47.0
+          npx playwright install --with-deps chromium
+
+      - name: Busca Base de Ativos no MetLife
+        env:
+          METLIFE_LOGIN: ${{ secrets.METLIFE_LOGIN }}
+          METLIFE_SENHA: ${{ secrets.METLIFE_SENHA }}
+        run: node .github/scripts/atualizar-base.js
+
+      - name: Publica resultado no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add base-atual-latest.xlsx base-atual-meta.json
+          git diff --staged --quiet || git commit -m "Atualiza Base de Ativos (automático)"
+          git push
