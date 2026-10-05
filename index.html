@@ -285,6 +285,32 @@
     cursor: pointer;
   }
   button.ghost:hover { border-color: var(--primary); }
+  button.ghost:disabled { opacity: .5; cursor: not-allowed; }
+
+  .auto-update-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .auto-update-text { max-width: 480px; }
+  .auto-update-text strong { display: block; font-size: 14px; margin-bottom: 3px; }
+  .auto-update-text span { display: block; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+  .auto-update-action { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .auto-update-status {
+    font-size: 12.5px;
+    color: var(--ink-2);
+    max-width: 260px;
+    line-height: 1.4;
+  }
+  .auto-update-status.error { color: var(--warn); }
+  .auto-update-status.ok { color: var(--ok); }
 
   .spinner {
     width: 16px; height: 16px;
@@ -634,6 +660,17 @@
           <span class="dz-badge" id="dz-inadimplentes-badge"></span>
         </div>
         <input type="file" id="input-inadimplentes" accept=".xlsx,.xls,.csv">
+      </div>
+    </div>
+
+    <div class="auto-update-box" id="auto-update-box">
+      <div class="auto-update-text">
+        <strong>Base atual direto do MetLife</strong>
+        <span>Em vez de anexar a planilha "Base atual" acima, busque os vidas ativos automaticamente no portal da MetLife (Consulta Relação de Associados Ativos).</span>
+      </div>
+      <div class="auto-update-action">
+        <button class="ghost" id="btn-auto-atualizar" type="button">Atualizar Base de Ativos</button>
+        <span class="auto-update-status" id="auto-atualizar-status"></span>
       </div>
     </div>
 
@@ -1262,6 +1299,85 @@
   setupDropzone("dz-atual", "input-atual", "atual");
   setupDropzone("dz-futura", "input-futura", "futura");
   setupDropzone("dz-inadimplentes", "input-inadimplentes", "inadimplentes");
+
+  // ---------- atualização automática da Base Atual (MetLife) ----------
+  // Fluxo: clique → aciona (via Worker) o GitHub Actions que faz login no
+  // portal da MetLife e exporta a Consulta Relação de Associados Ativos →
+  // aguarda o arquivo novo aparecer no repositório → baixa e processa pela
+  // mesma rotina usada para anexo manual (handleFile). Nenhuma senha passa
+  // pelo navegador de quem clica aqui.
+  const WORKER_URL = "https://move-group-relay.SEU-SUBDOMINIO.workers.dev/";
+  const AUTO_DATA_BASE = "https://raw.githubusercontent.com/spylogic/move-group-login/main/";
+  const AUTO_POLL_TIMEOUT_MS = 170000; // ~2m50s
+  const AUTO_POLL_INTERVAL_MS = 5000;
+
+  function setAutoStatus(msg, cls) {
+    const el = document.getElementById("auto-atualizar-status");
+    el.textContent = msg || "";
+    el.classList.remove("error", "ok");
+    if (cls) el.classList.add(cls);
+  }
+
+  async function fetchAutoMeta() {
+    const r = await fetch(AUTO_DATA_BASE + "base-atual-meta.json?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error("ainda não há um resultado publicado");
+    return r.json();
+  }
+
+  async function pollAutoMeta(before, timeoutMs) {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      await new Promise((resolve) => setTimeout(resolve, AUTO_POLL_INTERVAL_MS));
+      try {
+        const meta = await fetchAutoMeta();
+        if (!before || meta.updatedAt !== before.updatedAt) return meta;
+      } catch (e) {
+        // ainda não publicou — continua tentando
+      }
+    }
+    throw new Error("tempo esgotado esperando a MetLife responder. Tente novamente em alguns minutos ou anexe a planilha manualmente.");
+  }
+
+  document.getElementById("btn-auto-atualizar").addEventListener("click", async () => {
+    const btn = document.getElementById("btn-auto-atualizar");
+    if (WORKER_URL.includes("SEU-SUBDOMINIO")) {
+      setAutoStatus("Atualização automática ainda não configurada neste site.", "error");
+      return;
+    }
+    btn.disabled = true;
+    setAutoStatus("Acionando busca no MetLife…");
+    try {
+      const before = await fetchAutoMeta().catch(() => null);
+
+      const triggerResp = await fetch(WORKER_URL, { method: "POST" });
+      if (!triggerResp.ok) {
+        let detail = "";
+        try { detail = (await triggerResp.json()).detail || ""; } catch (e) {}
+        throw new Error("não consegui acionar a atualização (HTTP " + triggerResp.status + "). " + detail);
+      }
+
+      setAutoStatus("Buscando no MetLife — isso leva cerca de 1 minuto…");
+      const meta = await pollAutoMeta(before, AUTO_POLL_TIMEOUT_MS);
+      if (meta.status !== "ok") {
+        throw new Error(meta.erro || "a busca no MetLife terminou com erro.");
+      }
+
+      setAutoStatus("Baixando planilha atualizada…");
+      const resp = await fetch(AUTO_DATA_BASE + "base-atual-latest.xlsx?t=" + Date.now(), { cache: "no-store" });
+      if (!resp.ok) throw new Error("não consegui baixar a planilha publicada.");
+      const blob = await resp.blob();
+      const file = new File([blob], "base-atual-metlife.xlsx", { type: blob.type });
+      await handleFile("atual", file);
+
+      const quando = new Date(meta.updatedAt).toLocaleString("pt-BR");
+      setAutoStatus("Base atual atualizada a partir do MetLife (" + quando + ").", "ok");
+    } catch (err) {
+      setAutoStatus("Falha: " + err.message, "error");
+      toast("Não consegui atualizar automaticamente: " + err.message, 6000);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
   // ---------- processing ----------
   // Núcleo do cruzamento — usado tanto pelo clique em "Processar conferência"
