@@ -1302,11 +1302,14 @@
 
   // ---------- Base Atual: usar a última extração automática diária ----------
   // Modelo seguro: um job agendado (uma vez por dia, de madrugada) roda à
-  // parte no GitHub Actions, loga no portal da MetLife com credenciais
-  // guardadas em Secrets e publica o resultado como base-atual-latest.xlsx.
-  // Esse botão só LÊ esse arquivo já publicado — não dispara login nenhum
-  // a partir do clique, nenhuma senha passa por aqui.
-  const AUTO_DATA_BASE = "https://raw.githubusercontent.com/spylogic/move-group-login/main/";
+  // parte, num repositório PRIVADO, loga no portal da MetLife com
+  // credenciais guardadas em Secrets e salva o resultado lá dentro (nunca
+  // neste repositório público). Esse botão só LÊ esse arquivo, através de
+  // um relay (Cloudflare Worker) que busca o conteúdo no repositório
+  // privado — não dispara login nenhum a partir do clique, nenhuma senha
+  // passa por aqui, e os dados dos beneficiários (CPF, plano) não ficam
+  // publicamente baixáveis.
+  const WORKER_URL = "https://move-group-data-relay.pedromourabsbdf.workers.dev/";
 
   function setAutoStatus(msg, cls) {
     const el = document.getElementById("auto-atualizar-status");
@@ -1316,13 +1319,17 @@
   }
 
   async function fetchAutoMeta() {
-    const r = await fetch(AUTO_DATA_BASE + "base-atual-meta.json?t=" + Date.now(), { cache: "no-store" });
+    const r = await fetch(WORKER_URL + "?file=meta&t=" + Date.now(), { cache: "no-store" });
     if (!r.ok) throw new Error("a atualização automática ainda não foi publicada neste site.");
     return r.json();
   }
 
   document.getElementById("btn-auto-atualizar").addEventListener("click", async () => {
     const btn = document.getElementById("btn-auto-atualizar");
+    if (WORKER_URL.includes("SEU-SUBDOMINIO")) {
+      setAutoStatus("Atualização automática ainda não configurada neste site.", "error");
+      return;
+    }
     btn.disabled = true;
     setAutoStatus("Verificando a última atualização publicada…");
     try {
@@ -1332,7 +1339,7 @@
       }
 
       setAutoStatus("Baixando a base atual mais recente…");
-      const resp = await fetch(AUTO_DATA_BASE + "base-atual-latest.xlsx?t=" + Date.now(), { cache: "no-store" });
+      const resp = await fetch(WORKER_URL + "?file=xlsx&t=" + Date.now(), { cache: "no-store" });
       if (!resp.ok) throw new Error("não consegui baixar a planilha publicada.");
       const blob = await resp.blob();
       const file = new File([blob], "base-atual-metlife.xlsx", { type: blob.type });
