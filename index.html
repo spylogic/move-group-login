@@ -666,7 +666,7 @@
     <div class="auto-update-box" id="auto-update-box">
       <div class="auto-update-text">
         <strong>Base atual direto do MetLife</strong>
-        <span>Em vez de anexar a planilha "Base atual" acima, busque os vidas ativos automaticamente no portal da MetLife (Consulta Relação de Associados Ativos).</span>
+        <span>Em vez de anexar a planilha "Base atual" acima, use a extração automática mais recente (feita 1x por dia, de madrugada, direto da Consulta Relação de Associados Ativos da MetLife).</span>
       </div>
       <div class="auto-update-action">
         <button class="ghost" id="btn-auto-atualizar" type="button">Atualizar Base de Ativos</button>
@@ -1300,16 +1300,13 @@
   setupDropzone("dz-futura", "input-futura", "futura");
   setupDropzone("dz-inadimplentes", "input-inadimplentes", "inadimplentes");
 
-  // ---------- atualização automática da Base Atual (MetLife) ----------
-  // Fluxo: clique → aciona (via Worker) o GitHub Actions que faz login no
-  // portal da MetLife e exporta a Consulta Relação de Associados Ativos →
-  // aguarda o arquivo novo aparecer no repositório → baixa e processa pela
-  // mesma rotina usada para anexo manual (handleFile). Nenhuma senha passa
-  // pelo navegador de quem clica aqui.
-  const WORKER_URL = "https://move-group-relay.SEU-SUBDOMINIO.workers.dev/";
+  // ---------- Base Atual: usar a última extração automática diária ----------
+  // Modelo seguro: um job agendado (uma vez por dia, de madrugada) roda à
+  // parte no GitHub Actions, loga no portal da MetLife com credenciais
+  // guardadas em Secrets e publica o resultado como base-atual-latest.xlsx.
+  // Esse botão só LÊ esse arquivo já publicado — não dispara login nenhum
+  // a partir do clique, nenhuma senha passa por aqui.
   const AUTO_DATA_BASE = "https://raw.githubusercontent.com/spylogic/move-group-login/main/";
-  const AUTO_POLL_TIMEOUT_MS = 170000; // ~2m50s
-  const AUTO_POLL_INTERVAL_MS = 5000;
 
   function setAutoStatus(msg, cls) {
     const el = document.getElementById("auto-atualizar-status");
@@ -1320,49 +1317,21 @@
 
   async function fetchAutoMeta() {
     const r = await fetch(AUTO_DATA_BASE + "base-atual-meta.json?t=" + Date.now(), { cache: "no-store" });
-    if (!r.ok) throw new Error("ainda não há um resultado publicado");
+    if (!r.ok) throw new Error("a atualização automática ainda não foi publicada neste site.");
     return r.json();
-  }
-
-  async function pollAutoMeta(before, timeoutMs) {
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-      await new Promise((resolve) => setTimeout(resolve, AUTO_POLL_INTERVAL_MS));
-      try {
-        const meta = await fetchAutoMeta();
-        if (!before || meta.updatedAt !== before.updatedAt) return meta;
-      } catch (e) {
-        // ainda não publicou — continua tentando
-      }
-    }
-    throw new Error("tempo esgotado esperando a MetLife responder. Tente novamente em alguns minutos ou anexe a planilha manualmente.");
   }
 
   document.getElementById("btn-auto-atualizar").addEventListener("click", async () => {
     const btn = document.getElementById("btn-auto-atualizar");
-    if (WORKER_URL.includes("SEU-SUBDOMINIO")) {
-      setAutoStatus("Atualização automática ainda não configurada neste site.", "error");
-      return;
-    }
     btn.disabled = true;
-    setAutoStatus("Acionando busca no MetLife…");
+    setAutoStatus("Verificando a última atualização publicada…");
     try {
-      const before = await fetchAutoMeta().catch(() => null);
-
-      const triggerResp = await fetch(WORKER_URL, { method: "POST" });
-      if (!triggerResp.ok) {
-        let detail = "";
-        try { detail = (await triggerResp.json()).detail || ""; } catch (e) {}
-        throw new Error("não consegui acionar a atualização (HTTP " + triggerResp.status + "). " + detail);
-      }
-
-      setAutoStatus("Buscando no MetLife — isso leva cerca de 1 minuto…");
-      const meta = await pollAutoMeta(before, AUTO_POLL_TIMEOUT_MS);
+      const meta = await fetchAutoMeta();
       if (meta.status !== "ok") {
-        throw new Error(meta.erro || "a busca no MetLife terminou com erro.");
+        throw new Error(meta.erro || "a última tentativa de atualização automática terminou com erro.");
       }
 
-      setAutoStatus("Baixando planilha atualizada…");
+      setAutoStatus("Baixando a base atual mais recente…");
       const resp = await fetch(AUTO_DATA_BASE + "base-atual-latest.xlsx?t=" + Date.now(), { cache: "no-store" });
       if (!resp.ok) throw new Error("não consegui baixar a planilha publicada.");
       const blob = await resp.blob();
@@ -1370,10 +1339,10 @@
       await handleFile("atual", file);
 
       const quando = new Date(meta.updatedAt).toLocaleString("pt-BR");
-      setAutoStatus("Base atual atualizada a partir do MetLife (" + quando + ").", "ok");
+      setAutoStatus("Base atual carregada — extração automática de " + quando + ".", "ok");
     } catch (err) {
       setAutoStatus("Falha: " + err.message, "error");
-      toast("Não consegui atualizar automaticamente: " + err.message, 6000);
+      toast("Não consegui usar a atualização automática: " + err.message + " — anexe a planilha manualmente.", 6000);
     } finally {
       btn.disabled = false;
     }
