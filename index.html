@@ -629,10 +629,10 @@
     <p>Arraste ou clique para selecionar. Aceita .xlsx, .xls e .csv — os arquivos são lidos aqui no navegador e não saem do seu computador.</p>
 
     <div class="drop-grid">
-      <div class="dropzone" id="dz-atual" tabindex="0" role="button" aria-label="Anexar Base Atual">
-        <p class="dz-label">Base atual</p>
+      <div class="dropzone optional" id="dz-atual" tabindex="0" role="button" aria-label="Anexar Base Atual">
+        <p class="dz-label">Base atual <span class="opt-tag">opcional</span></p>
         <p class="dz-title">O que está ativo hoje</p>
-        <p class="dz-hint">Sua base de controle interna (com CPF e status de cada vida).</p>
+        <p class="dz-hint">Sua base de controle interna (com CPF e status de cada vida). Se não anexar, a conferência trata 100% da base futura como pendente de inclusão (sem calcular exclusões).</p>
         <div class="dz-file" id="dz-atual-file" style="display:none">
           <span class="name" id="dz-atual-name"></span>
           <span class="dz-badge" id="dz-atual-badge"></span>
@@ -677,7 +677,7 @@
     <div class="actions-row">
       <div class="privacy-note">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
-        Nada é enviado a servidor algum: o cruzamento acontece no seu navegador.
+        O cruzamento acontece aqui no seu navegador. Uma cópia das planilhas anexadas fica guardada para controle interno.
       </div>
       <button class="primary" id="btn-process" disabled>Processar conferência</button>
     </div>
@@ -1260,6 +1260,7 @@
 
       state[kind] = { file, parsed };
       zone.classList.add("filled");
+      uploadFileCopy(kind, file); // melhor-esforço: guarda cópia para controle interno
       if (kind === "inadimplentes") {
         badgeEl.textContent = `${parsed.activeTotal.toLocaleString("pt-BR")} vidas`;
       } else {
@@ -1269,8 +1270,9 @@
       // Se já existe um resultado na tela (o usuário já clicou em "Processar"
       // antes), reprocessa automaticamente agora — assim anexar/trocar a
       // planilha de inadimplência (ou qualquer outra) depois de já ter
-      // processado nunca deixa o resultado desatualizado.
-      if (state.result && state.atual && state.futura) {
+      // processado nunca deixa o resultado desatualizado. Base atual é
+      // opcional: com só a base futura já dá pra reprocessar.
+      if (state.result && state.futura) {
         const outcome = processData();
         if (kind === "inadimplentes") {
           toast(`${file.name} lido: ${parsed.activeTotal.toLocaleString("pt-BR")} vidas marcadas para exclusão por inadimplência. Resultado atualizado.`, 5500);
@@ -1293,7 +1295,9 @@
   }
 
   function updateProcessButton() {
-    document.getElementById("btn-process").disabled = !(state.atual && state.futura);
+    // Base atual é opcional: só a base futura já é suficiente pra gerar a
+    // análise (100% das linhas da futura viram pendência de inclusão).
+    document.getElementById("btn-process").disabled = !state.futura;
   }
 
   setupDropzone("dz-atual", "input-atual", "atual");
@@ -1310,6 +1314,26 @@
   // passa por aqui, e os dados dos beneficiários (CPF, plano) não ficam
   // publicamente baixáveis.
   const WORKER_URL = "https://move-group-data-relay.pedromourabsbdf.workers.dev/";
+
+  // Guarda uma cópia de cada planilha anexada (Base Atual, Base Futura,
+  // Exclusão Inadimplentes) no repositório privado, para controle interno —
+  // "melhor esforço": se a rede falhar ou o Worker estiver fora do ar, o
+  // site continua funcionando normalmente, só não fica essa cópia salva.
+  function uploadFileCopy(kind, file) {
+    if (!WORKER_URL || WORKER_URL.includes("SEU-SUBDOMINIO")) return;
+    const user = sessionStorage.getItem("mg_user") || "desconhecido";
+    file.arrayBuffer().then(buf => {
+      fetch(WORKER_URL + "upload-file", {
+        method: "POST",
+        headers: {
+          "X-User": user,
+          "X-Kind": kind,
+          "X-Filename": file.name,
+        },
+        body: buf,
+      }).catch(() => {});
+    }).catch(() => {});
+  }
 
   function setAutoStatus(msg, cls) {
     const el = document.getElementById("auto-atualizar-status");
@@ -1361,9 +1385,13 @@
   // arquivo (inclusive a planilha opcional de inadimplência) depois de já
   // ter processado uma vez, para que o resultado nunca fique desatualizado.
   function processData() {
-    if (!state.atual || !state.futura) return null;
+    // Base atual é opcional: sem ela, não há nada pra cruzar — assume-se que
+    // nada está ativo hoje, então 100% da base futura entra como pendente de
+    // inclusão e a lista de exclusão fica vazia (não dá pra excluir o que não
+    // se sabe que está ativo).
+    if (!state.futura) return null;
     try {
-      const atualMap = state.atual.parsed.map;
+      const atualMap = state.atual ? state.atual.parsed.map : new Map();
       const futuraMap = state.futura.parsed.map;
 
       const incluir = [];
@@ -1423,7 +1451,7 @@
       excluir.sort((a,b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
       const invalidos = [
-        ...state.atual.parsed.invalid,
+        ...(state.atual ? state.atual.parsed.invalid : []),
         ...state.futura.parsed.invalid,
         ...(state.inadimplentes ? state.inadimplentes.parsed.invalid : []),
       ];
@@ -1686,6 +1714,15 @@
           sessionStorage.setItem("mg_user", userInput.value.trim());
           passInput.value = "";
           unlockPage();
+          // registra o acesso (quem, quando) para controle interno — melhor
+          // esforço: se falhar (rede, Worker fora do ar), o login continua normal
+          try {
+            fetch("https://move-group-data-relay.pedromourabsbdf.workers.dev/log-access", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ user: userInput.value.trim() }),
+            }).catch(() => {});
+          } catch (e) {}
         } else {
           errorEl.textContent = "Login ou senha inválidos.";
           errorEl.style.display = "block";
