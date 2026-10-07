@@ -1,0 +1,464 @@
+<title>Move Group — Gestão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #F3F6F8;
+    --surface: #FFFFFF;
+    --surface-2: #EBF0F4;
+    --border: #D9E1E8;
+    --ink: #16222C;
+    --ink-2: #5B6B79;
+    --ink-3: #8B99A6;
+    --primary: #17495F;
+    --primary-hi: #1F5D78;
+    --primary-ink: #FFFFFF;
+    --accent: #D98A34;
+    --ok: #1D7A4C;
+    --ok-bg: #E4F5EA;
+    --ok-border: #BFE4CE;
+    --warn: #B0392B;
+    --warn-bg: #FCEAE6;
+    --warn-border: #F0C4BA;
+    --shadow-sm: 0 1px 2px rgba(15, 27, 36, .06);
+    --shadow-md: 0 6px 20px rgba(15, 27, 36, .08);
+    --radius: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D1620;
+      --surface: #142330;
+      --surface-2: #1B2D3C;
+      --border: #2A3E4C;
+      --ink: #E9F0F5;
+      --ink-2: #9FB0BE;
+      --ink-3: #71828F;
+      --primary: #4F93AF;
+      --primary-hi: #66A6C0;
+      --primary-ink: #08141B;
+      --accent: #E8A33D;
+      --ok: #55C48B;
+      --ok-bg: #103322;
+      --ok-border: #1B4B33;
+      --warn: #E5836F;
+      --warn-bg: #35201A;
+      --warn-border: #4E2B22;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
+      --shadow-md: 0 10px 26px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D1620; --surface: #142330; --surface-2: #1B2D3C; --border: #2A3E4C;
+    --ink: #E9F0F5; --ink-2: #9FB0BE; --ink-3: #71828F; --primary: #4F93AF;
+    --primary-hi: #66A6C0; --primary-ink: #08141B; --accent: #E8A33D;
+    --ok: #55C48B; --ok-bg: #103322; --ok-border: #1B4B33;
+    --warn: #E5836F; --warn-bg: #35201A; --warn-border: #4E2B22;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .3); --shadow-md: 0 10px 26px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px 64px; }
+
+  header.top {
+    background: linear-gradient(155deg, var(--primary) 0%, var(--primary-hi) 100%);
+    color: var(--primary-ink);
+    padding: 36px 24px 42px;
+    margin-bottom: -26px;
+  }
+  header.top .inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    opacity: .78; margin: 0 0 10px;
+  }
+  h1 {
+    font-family: "Manrope", sans-serif; font-weight: 800;
+    font-size: clamp(26px, 3.6vw, 34px); letter-spacing: -.01em; margin: 0 0 6px;
+  }
+  header.top p.lede { font-size: 14.5px; max-width: 560px; line-height: 1.5; opacity: .92; margin: 0; }
+
+  .logout-link {
+    font-size: 12.5px; font-weight: 600; color: var(--primary-ink);
+    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3);
+    padding: 8px 14px; border-radius: 9px; cursor: pointer; font-family: inherit;
+  }
+  .logout-link:hover { background: rgba(255,255,255,.22); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* ---------- password gate ---------- */
+  .gate-wrap {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .gate-card {
+    width: 100%; max-width: 360px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-md);
+    padding: 28px 26px 24px;
+  }
+  .gate-card .eyebrow { font-size: 11.5px; color: var(--ink-3); }
+  .gate-card h1 { font-family: "Manrope", sans-serif; font-size: 22px; margin: 0 0 4px; }
+  .gate-card p.lede { font-size: 13.5px; color: var(--ink-2); margin: 0 0 20px; line-height: 1.5; }
+  .gate-card label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin: 14px 0 6px; }
+  .gate-card input {
+    width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--ink);
+    font-size: 14px; font-family: inherit;
+  }
+  .gate-card input:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .gate-card button {
+    width: 100%; margin-top: 20px; padding: 11px 16px; border: none; border-radius: 10px;
+    background: var(--primary); color: var(--primary-ink); font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+  }
+  .gate-card button:hover { background: var(--primary-hi); }
+  .gate-card button:disabled { opacity: .6; cursor: default; }
+  .gate-error {
+    margin: 14px 0 0; padding: 10px 12px; border-radius: 9px;
+    background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn); font-size: 13px;
+  }
+  .hidden { display: none !important; }
+
+  /* ---------- dashboard ---------- */
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px; margin: 30px 0 26px;
+  }
+  .stat-tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 18px 16px; box-shadow: var(--shadow-sm);
+  }
+  .stat-tile .num {
+    font-family: "IBM Plex Mono", monospace; font-size: 28px; font-weight: 600;
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .stat-tile .lbl { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.4; }
+
+  .section-card { margin-top: 24px; overflow: hidden; }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .section-head h2 { font-family: "Manrope", sans-serif; font-size: 16px; margin: 0 0 2px; }
+  .section-head p { font-size: 12.5px; color: var(--ink-2); margin: 0; max-width: 520px; line-height: 1.5; }
+  button.ghost {
+    font-family: "Public Sans", sans-serif; font-weight: 600; font-size: 13px; color: var(--primary);
+    background: transparent; border: 1px solid var(--border); padding: 7px 13px;
+    border-radius: 9px; cursor: pointer; white-space: nowrap;
+  }
+  button.ghost:hover { border-color: var(--primary); }
+  button.ghost:disabled { opacity: .5; cursor: not-allowed; }
+
+  .table-scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  thead th {
+    position: sticky; top: 0; background: var(--surface-2); text-align: left;
+    padding: 10px 14px; font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--ink); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface-2); }
+  td.mono, th.mono { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.name { white-space: normal; min-width: 160px; }
+
+  .empty-state { padding: 40px 24px; text-align: center; color: var(--ink-2); }
+  .empty-state .big { font-size: 30px; margin-bottom: 8px; }
+
+  .kind-tag {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .kind-tag.atual { background: var(--ok-bg); color: var(--ok); }
+  .kind-tag.futura { background: color-mix(in srgb, var(--accent) 20%, var(--surface-2)); color: var(--accent); }
+  .kind-tag.inadimplentes { background: var(--warn-bg); color: var(--warn); }
+
+  .toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 10px;
+    font-size: 13.5px; font-weight: 500; box-shadow: var(--shadow-md); opacity: 0;
+    pointer-events: none; transition: opacity .2s ease, transform .2s ease; z-index: 50; max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+
+<div class="gate-wrap" id="gate-wrap">
+  <div class="gate-card">
+    <p class="eyebrow">Página de gestão</p>
+    <h1>Move Group — Gestão</h1>
+    <p class="lede">Acesso restrito. Informe a senha de administrador para ver acessos e arquivos anexados.</p>
+    <form id="gate-form">
+      <label for="gate-pass">Senha de administrador</label>
+      <input type="password" id="gate-pass" autocomplete="current-password" required>
+      <button type="submit" id="gate-submit">Entrar</button>
+      <p class="gate-error" id="gate-error" style="display:none"></p>
+    </form>
+  </div>
+</div>
+
+<div id="dashboard" class="hidden">
+  <header class="top">
+    <div class="inner">
+      <div>
+        <p class="eyebrow">Move Group</p>
+        <h1>Página de gestão</h1>
+        <p class="lede">Acessos ao site e cópias das planilhas anexadas, para controle interno.</p>
+      </div>
+      <button class="logout-link" id="logout-btn">Sair</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="stat-grid">
+      <div class="stat-tile">
+        <div class="num" id="stat-accesses">0</div>
+        <div class="lbl">Acessos (logins) registrados</div>
+      </div>
+      <div class="stat-tile">
+        <div class="num" id="stat-users">0</div>
+        <div class="lbl">Logins distintos que já acessaram</div>
+      </div>
+      <div class="stat-tile">
+        <div class="num" id="stat-uploads">0</div>
+        <div class="lbl">Arquivos anexados registrados</div>
+      </div>
+    </div>
+
+    <div class="card section-card">
+      <div class="section-head">
+        <div>
+          <h2>Acessos ao site</h2>
+          <p>Cada login feito em move-group-login, do mais recente para o mais antigo.</p>
+        </div>
+        <button class="ghost" id="btn-refresh-accesses">Atualizar</button>
+      </div>
+      <div class="table-scroll" id="accesses-scroll">
+        <table>
+          <thead><tr><th>Quando</th><th>Login</th><th>IP</th></tr></thead>
+          <tbody id="accesses-body"></tbody>
+        </table>
+        <div class="empty-state" id="accesses-empty" style="display:none">
+          <div class="big">—</div>
+          <span>Nenhum acesso registrado ainda.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section-card">
+      <div class="section-head">
+        <div>
+          <h2>Arquivos anexados</h2>
+          <p>Cópia de cada planilha (Base Atual, Base Futura, Exclusão Inadimplentes) anexada no site, com quem anexou.</p>
+        </div>
+        <button class="ghost" id="btn-refresh-uploads">Atualizar</button>
+      </div>
+      <div class="table-scroll" id="uploads-scroll">
+        <table>
+          <thead><tr><th>Quando</th><th>Login</th><th>Tipo</th><th>Arquivo</th><th>Tamanho</th><th></th></tr></thead>
+          <tbody id="uploads-body"></tbody>
+        </table>
+        <div class="empty-state" id="uploads-empty" style="display:none">
+          <div class="big">—</div>
+          <span>Nenhum arquivo anexado registrado ainda.</span>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-top:30px;font-size:12.5px;color:var(--ink-3);text-align:center;line-height:1.6">
+      Esta página usa uma senha separada da senha de login do site e não fica acessível a mais ninguém.
+    </p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const WORKER_URL = "https://move-group-data-relay.pedromourabsbdf.workers.dev";
+  let adminPassword = "";
+
+  const gateWrap = document.getElementById("gate-wrap");
+  const dashboard = document.getElementById("dashboard");
+  const gateForm = document.getElementById("gate-form");
+  const gatePass = document.getElementById("gate-pass");
+  const gateError = document.getElementById("gate-error");
+  const gateSubmit = document.getElementById("gate-submit");
+
+  function toast(msg, ms) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._h);
+    toast._h = setTimeout(() => t.classList.remove("show"), ms || 3200);
+  }
+
+  function fmtWhen(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleString("pt-BR");
+  }
+
+  function fmtSize(bytes) {
+    if (bytes == null) return "";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  }
+
+  const KIND_LABEL = { atual: "Base atual", futura: "Base futura", inadimplentes: "Exclusão inadimplentes" };
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  async function fetchList() {
+    const resp = await fetch(WORKER_URL + "/admin/list", {
+      headers: { "X-Admin-Password": adminPassword },
+      cache: "no-store",
+    });
+    if (resp.status === 401) throw new Error("senha de administrador inválida");
+    if (!resp.ok) throw new Error("falha ao carregar (HTTP " + resp.status + ")");
+    return resp.json();
+  }
+
+  function renderAccesses(accesses) {
+    const body = document.getElementById("accesses-body");
+    const empty = document.getElementById("accesses-empty");
+    document.getElementById("stat-accesses").textContent = accesses.length.toLocaleString("pt-BR");
+    const distinctUsers = new Set(accesses.map(a => a.user)).size;
+    document.getElementById("stat-users").textContent = distinctUsers.toLocaleString("pt-BR");
+
+    if (!accesses.length) {
+      body.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    body.innerHTML = accesses.map(a => `
+      <tr>
+        <td class="mono">${escapeHtml(fmtWhen(a.timestamp))}</td>
+        <td>${escapeHtml(a.user)}</td>
+        <td class="mono">${escapeHtml(a.ip || "")}</td>
+      </tr>
+    `).join("");
+  }
+
+  function renderUploads(uploads) {
+    const body = document.getElementById("uploads-body");
+    const empty = document.getElementById("uploads-empty");
+    document.getElementById("stat-uploads").textContent = uploads.length.toLocaleString("pt-BR");
+
+    if (!uploads.length) {
+      body.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    body.innerHTML = uploads.map((u, i) => `
+      <tr>
+        <td class="mono">${escapeHtml(fmtWhen(u.timestamp))}</td>
+        <td>${escapeHtml(u.user)}</td>
+        <td><span class="kind-tag ${escapeHtml(u.kind)}">${escapeHtml(KIND_LABEL[u.kind] || u.kind)}</span></td>
+        <td class="name">${escapeHtml(u.filename)}</td>
+        <td class="mono">${escapeHtml(fmtSize(u.size))}</td>
+        <td><button class="ghost btn-download-upload" data-idx="${i}">Baixar</button></td>
+      </tr>
+    `).join("");
+
+    body.querySelectorAll(".btn-download-upload").forEach(btn => {
+      btn.addEventListener("click", () => downloadUpload(uploads[Number(btn.dataset.idx)], btn));
+    });
+  }
+
+  async function downloadUpload(upload, btn) {
+    const original = btn.textContent;
+    btn.textContent = "Baixando…";
+    btn.disabled = true;
+    try {
+      const url = WORKER_URL + "/admin/download?key=" + encodeURIComponent(upload.path) + "&filename=" + encodeURIComponent(upload.filename);
+      const resp = await fetch(url, { headers: { "X-Admin-Password": adminPassword } });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const blob = await resp.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = upload.filename || "arquivo";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 4000);
+    } catch (err) {
+      toast("Não consegui baixar: " + err.message, 4500);
+    } finally {
+      btn.textContent = original;
+      btn.disabled = false;
+    }
+  }
+
+  async function loadAll(showToastOnError) {
+    try {
+      const data = await fetchList();
+      renderAccesses(data.accesses || []);
+      renderUploads(data.uploads || []);
+    } catch (err) {
+      if (showToastOnError) toast("Erro ao atualizar: " + err.message, 4500);
+      throw err;
+    }
+  }
+
+  gateForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    gateError.style.display = "none";
+    gateSubmit.disabled = true;
+    gateSubmit.textContent = "Verificando…";
+    const typed = gatePass.value;
+    try {
+      adminPassword = typed;
+      await loadAll(false);
+      gatePass.value = "";
+      gateWrap.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+    } catch (err) {
+      adminPassword = "";
+      gateError.textContent = err.message === "senha de administrador inválida"
+        ? "Senha incorreta."
+        : "Erro ao verificar: " + err.message;
+      gateError.style.display = "block";
+    } finally {
+      gateSubmit.disabled = false;
+      gateSubmit.textContent = "Entrar";
+    }
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    adminPassword = "";
+    dashboard.classList.add("hidden");
+    gateWrap.classList.remove("hidden");
+  });
+
+  document.getElementById("btn-refresh-accesses").addEventListener("click", () => loadAll(true));
+  document.getElementById("btn-refresh-uploads").addEventListener("click", () => loadAll(true));
+})();
+</script>
