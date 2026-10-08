@@ -141,6 +141,26 @@
     display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 14px; margin: 30px 0 26px;
   }
+  .base-status-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 20px; margin: 30px 0 0;
+  }
+  .base-status-icon {
+    width: 14px; height: 14px; border-radius: 50%; flex: none;
+    background: var(--ink-3);
+  }
+  .base-status-icon.ok { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-bg); }
+  .base-status-icon.warn { background: var(--warn); box-shadow: 0 0 0 4px var(--warn-bg); }
+  .base-status-body { min-width: 0; }
+  .base-status-label {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-3); margin: 0 0 4px;
+  }
+  .base-status-main { font-size: 15px; font-weight: 700; margin: 0; color: var(--ink); }
+  .base-status-main.ok { color: var(--ok); }
+  .base-status-main.warn { color: var(--warn); }
+  .base-status-sub { font-size: 12.5px; color: var(--ink-2); margin: 4px 0 0; line-height: 1.4; }
+
   .stat-tile {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     padding: 18px 18px 16px; box-shadow: var(--shadow-sm);
@@ -228,6 +248,15 @@
   </header>
 
   <div class="wrap">
+    <div class="card base-status-card" id="base-status-card">
+      <div class="base-status-icon" id="base-status-icon"></div>
+      <div class="base-status-body">
+        <p class="base-status-label">Base Atual — extração automática MetLife</p>
+        <p class="base-status-main" id="base-status-main">Verificando última atualização…</p>
+        <p class="base-status-sub" id="base-status-sub"></p>
+      </div>
+    </div>
+
     <div class="stat-grid">
       <div class="stat-tile">
         <div class="num" id="stat-accesses">0</div>
@@ -333,6 +362,43 @@
     return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
 
+  async function fetchBaseStatus() {
+    const r = await fetch(WORKER_URL + "/?file=meta&t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }
+
+  function renderBaseStatus(meta, errMsg) {
+    const icon = document.getElementById("base-status-icon");
+    const main = document.getElementById("base-status-main");
+    const sub = document.getElementById("base-status-sub");
+    icon.classList.remove("ok", "warn");
+    main.classList.remove("ok", "warn");
+
+    if (errMsg) {
+      icon.classList.add("warn");
+      main.classList.add("warn");
+      main.textContent = "Não consegui verificar a base atual";
+      sub.textContent = errMsg;
+      return;
+    }
+    if (!meta || meta.status !== "ok" || !meta.updatedAt) {
+      icon.classList.add("warn");
+      main.classList.add("warn");
+      main.textContent = "Sem atualização bem-sucedida registrada";
+      sub.textContent = (meta && meta.erro) ? meta.erro : "A extração automática ainda não publicou uma base válida.";
+      return;
+    }
+    const when = new Date(meta.updatedAt);
+    const ageHours = (Date.now() - when.getTime()) / 36e5;
+    const stale = ageHours > 30;
+    icon.classList.add(stale ? "warn" : "ok");
+    main.classList.add(stale ? "warn" : "ok");
+    main.textContent = "Última atualização bem-sucedida: " + when.toLocaleString("pt-BR");
+    const sizeTxt = meta.sizeBytes ? " · " + (meta.sizeBytes / (1024 * 1024)).toFixed(1) + " MB" : "";
+    sub.textContent = (stale ? "Atenção: já passou de 30h sem atualizar com sucesso. " : "") + "Extração diária automática do MetLife (por volta das 03h)" + sizeTxt;
+  }
+
   async function fetchList() {
     const resp = await fetch(WORKER_URL + "/admin/list", {
       headers: { "X-Admin-Password": adminPassword },
@@ -418,6 +484,7 @@
   }
 
   async function loadAll(showToastOnError) {
+    fetchBaseStatus().then(meta => renderBaseStatus(meta)).catch(err => renderBaseStatus(null, err.message));
     try {
       const data = await fetchList();
       renderAccesses(data.accesses || []);
